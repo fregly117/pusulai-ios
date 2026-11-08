@@ -1,0 +1,68 @@
+name: Build and Release PusulAI iOS
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Build Archive
+        run: |
+          xcodebuild -project PusulAI.xcodeproj \
+            -scheme PusulAI \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath build/PusulAI.xcarchive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            clean archive
+
+      - name: Package IPA
+        run: |
+          mkdir -p build/Payload
+          cp -R build/PusulAI.xcarchive/Products/Applications/PusulAI.app build/Payload/
+          cd build
+          zip -r -y PusulAI.ipa Payload
+          ls -lh PusulAI.ipa
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PusulAI-iOS-IPA
+          path: build/PusulAI.ipa
+          retention-days: 14
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: PusulAI Pro iOS v1.0.0
+          body: |
+            ## 📱 PusulAI Pro — Saf Yerel SwiftUI iOS Uygulaması
+
+            Bu sürüm Apple Xcode ve SwiftUI mimarisi ile sıfırdan derlenmiştir.
+            
+            ### Özellikler
+            - ⚽ **SofaScore Standartlarında Canlı Bülten & Maçlar**
+            - 🏟️ **2D Futbol Sahası & Canlı Kadro Dizilişleri (4-2-3-1, 4-3-3 vb.)**
+            - 🧠 **PusulAI Copilot (Yapay Zeka Kupon Motoru)**
+            - 🎯 **Taptic Engine Haptik Geri Bildirim & Canlı Gol Sesleri**
+            - 🎟️ **Kuponum ve Tahmini Kazanç Hesaplayıcı**
+            
+            ### İndirme
+            Aşağıdaki **Assets** bölümünden `PusulAI.ipa` dosyasını indirip 3uTools veya Sideloadly ile yükleyebilirsiniz.
+          files: build/PusulAI.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
