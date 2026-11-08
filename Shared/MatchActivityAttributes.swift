@@ -19,4 +19,11 @@ struct MatchActivityAttributes: ActivityAttributes {
     var homeShort: String
     var awayShort: String
     var league: String
+
+    /// Takım logolarının adresi (ESPN / FotMob). Uygulama bunları indirip ortak klasöre koyar.
+    var homeLogoURL: String?
+    var awayLogoURL: String?
+    /// Etkinliğin içine gömülü küçük logo (ortak klasör kullanılamazsa yedek)
+    var homeThumb: Data?
+    var awayThumb: Data?
 }
