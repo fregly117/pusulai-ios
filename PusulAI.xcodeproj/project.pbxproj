@@ -1,0 +1,317 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		BB0000000100000000000001 /* PusulAIApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000100000000000001 /* PusulAIApp.swift */; };
+		BB0000000200000000000001 /* LiveBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000200000000000001 /* LiveBadge.swift */; };
+		BB0000000300000000000001 /* OddsButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000300000000000001 /* OddsButton.swift */; };
+		BB0000000400000000000001 /* StatRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000400000000000001 /* StatRowView.swift */; };
+		BB0000000500000000000001 /* TeamLogoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000500000000000001 /* TeamLogoView.swift */; };
+		BB0000000600000000000001 /* Lineup.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000600000000000001 /* Lineup.swift */; };
+		BB0000000700000000000001 /* Match.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000700000000000001 /* Match.swift */; };
+		BB0000000800000000000001 /* Odds.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000800000000000001 /* Odds.swift */; };
+		BB0000000900000000000001 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000000900000000000001 /* APIService.swift */; };
+		BB0000001000000000000001 /* CouponStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001000000000000001 /* CouponStore.swift */; };
+		BB0000001100000000000001 /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001100000000000001 /* HapticManager.swift */; };
+		BB0000001200000000000001 /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001200000000000001 /* SoundManager.swift */; };
+		BB0000001300000000000001 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001300000000000001 /* MainTabView.swift */; };
+		BB0000001400000000000001 /* CopilotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001400000000000001 /* CopilotView.swift */; };
+		BB0000001500000000000001 /* CouponView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001500000000000001 /* CouponView.swift */; };
+		BB0000001600000000000001 /* FavoritesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001600000000000001 /* FavoritesView.swift */; };
+		BB0000001700000000000001 /* MatchCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001700000000000001 /* MatchCardView.swift */; };
+		BB0000001800000000000001 /* MatchDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001800000000000001 /* MatchDetailView.swift */; };
+		BB0000001900000000000001 /* MatchesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000001900000000000001 /* MatchesView.swift */; };
+		BB0000002000000000000001 /* SoccerPitchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000002000000000000001 /* SoccerPitchView.swift */; };
+		BB0000002100000000000001 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0000002100000000000001 /* SettingsView.swift */; };
+		BB0000900100000000000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FF0000900100000000000001 /* Assets.xcassets */; };
+		BB0000900200000000000001 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FF0000900200000000000001 /* LaunchScreen.storyboard */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		FF0000000000000000000001 /* PusulAI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PusulAI.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FF0000000100000000000001 /* PusulAIApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "PusulAIApp.swift"; sourceTree = "<group>"; };
+		FF0000000200000000000001 /* LiveBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/LiveBadge.swift"; sourceTree = "<group>"; };
+		FF0000000300000000000001 /* OddsButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/OddsButton.swift"; sourceTree = "<group>"; };
+		FF0000000400000000000001 /* StatRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/StatRowView.swift"; sourceTree = "<group>"; };
+		FF0000000500000000000001 /* TeamLogoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Components/TeamLogoView.swift"; sourceTree = "<group>"; };
+		FF0000000600000000000001 /* Lineup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Lineup.swift"; sourceTree = "<group>"; };
+		FF0000000700000000000001 /* Match.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Match.swift"; sourceTree = "<group>"; };
+		FF0000000800000000000001 /* Odds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Models/Odds.swift"; sourceTree = "<group>"; };
+		FF0000000900000000000001 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/APIService.swift"; sourceTree = "<group>"; };
+		FF0000001000000000000001 /* CouponStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/CouponStore.swift"; sourceTree = "<group>"; };
+		FF0000001100000000000001 /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/HapticManager.swift"; sourceTree = "<group>"; };
+		FF0000001200000000000001 /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Services/SoundManager.swift"; sourceTree = "<group>"; };
+		FF0000001300000000000001 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/MainTabView.swift"; sourceTree = "<group>"; };
+		FF0000001400000000000001 /* CopilotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Copilot/CopilotView.swift"; sourceTree = "<group>"; };
+		FF0000001500000000000001 /* CouponView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Coupon/CouponView.swift"; sourceTree = "<group>"; };
+		FF0000001600000000000001 /* FavoritesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Favorites/FavoritesView.swift"; sourceTree = "<group>"; };
+		FF0000001700000000000001 /* MatchCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Matches/MatchCardView.swift"; sourceTree = "<group>"; };
+		FF0000001800000000000001 /* MatchDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Matches/MatchDetailView.swift"; sourceTree = "<group>"; };
+		FF0000001900000000000001 /* MatchesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Matches/MatchesView.swift"; sourceTree = "<group>"; };
+		FF0000002000000000000001 /* SoccerPitchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Matches/SoccerPitchView.swift"; sourceTree = "<group>"; };
+		FF0000002100000000000001 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Views/Settings/SettingsView.swift"; sourceTree = "<group>"; };
+		FF0000900100000000000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FF0000900300000000000001 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		FF0000900400000000000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CC0000100000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		CC0000200000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				CC0000210000000000000001 /* PusulAI */,
+				CC0000220000000000000001 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		CC0000210000000000000001 /* PusulAI */ = {
+			isa = PBXGroup;
+			children = (
+				FF0000000100000000000001 /* PusulAIApp.swift */,
+				FF0000000200000000000001 /* LiveBadge.swift */,
+				FF0000000300000000000001 /* OddsButton.swift */,
+				FF0000000400000000000001 /* StatRowView.swift */,
+				FF0000000500000000000001 /* TeamLogoView.swift */,
+				FF0000000600000000000001 /* Lineup.swift */,
+				FF0000000700000000000001 /* Match.swift */,
+				FF0000000800000000000001 /* Odds.swift */,
+				FF0000000900000000000001 /* APIService.swift */,
+				FF0000001000000000000001 /* CouponStore.swift */,
+				FF0000001100000000000001 /* HapticManager.swift */,
+				FF0000001200000000000001 /* SoundManager.swift */,
+				FF0000001300000000000001 /* MainTabView.swift */,
+				FF0000001400000000000001 /* CopilotView.swift */,
+				FF0000001500000000000001 /* CouponView.swift */,
+				FF0000001600000000000001 /* FavoritesView.swift */,
+				FF0000001700000000000001 /* MatchCardView.swift */,
+				FF0000001800000000000001 /* MatchDetailView.swift */,
+				FF0000001900000000000001 /* MatchesView.swift */,
+				FF0000002000000000000001 /* SoccerPitchView.swift */,
+				FF0000002100000000000001 /* SettingsView.swift */,
+				FF0000900100000000000001 /* Assets.xcassets */,
+				FF0000900200000000000001 /* LaunchScreen.storyboard */,
+				FF0000900400000000000001 /* Info.plist */,
+			);
+			path = PusulAI;
+			sourceTree = "<group>";
+		};
+		CC0000220000000000000001 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FF0000000000000000000001 /* PusulAI.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		CC0000300000000000000001 /* PusulAI */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CC0000400000000000000001 /* Build configuration list for PBXNativeTarget "PusulAI" */;
+			buildPhases = (
+				CC0000110000000000000001 /* Sources */,
+				CC0000100000000000000001 /* Frameworks */,
+				CC0000120000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = PusulAI;
+			productName = PusulAI;
+			productReference = FF0000000000000000000001 /* PusulAI.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		CC0000500000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					CC0000300000000000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = CC0000600000000000000001 /* Build configuration list for PBXProject "PusulAI" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = tr;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				tr,
+				Base,
+			);
+			mainGroup = CC0000200000000000000001;
+			productRefGroup = CC0000220000000000000001 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				CC0000300000000000000001 /* PusulAI */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		CC0000120000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000900200000000000001 /* LaunchScreen.storyboard in Resources */,
+				BB0000900100000000000001 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		CC0000110000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB0000000100000000000001 /* PusulAIApp.swift in Sources */,
+				BB0000000200000000000001 /* LiveBadge.swift in Sources */,
+				BB0000000300000000000001 /* OddsButton.swift in Sources */,
+				BB0000000400000000000001 /* StatRowView.swift in Sources */,
+				BB0000000500000000000001 /* TeamLogoView.swift in Sources */,
+				BB0000000600000000000001 /* Lineup.swift in Sources */,
+				BB0000000700000000000001 /* Match.swift in Sources */,
+				BB0000000800000000000001 /* Odds.swift in Sources */,
+				BB0000000900000000000001 /* APIService.swift in Sources */,
+				BB0000001000000000000001 /* CouponStore.swift in Sources */,
+				BB0000001100000000000001 /* HapticManager.swift in Sources */,
+				BB0000001200000000000001 /* SoundManager.swift in Sources */,
+				BB0000001300000000000001 /* MainTabView.swift in Sources */,
+				BB0000001400000000000001 /* CopilotView.swift in Sources */,
+				BB0000001500000000000001 /* CouponView.swift in Sources */,
+				BB0000001600000000000001 /* FavoritesView.swift in Sources */,
+				BB0000001700000000000001 /* MatchCardView.swift in Sources */,
+				BB0000001800000000000001 /* MatchDetailView.swift in Sources */,
+				BB0000001900000000000001 /* MatchesView.swift in Sources */,
+				BB0000002000000000000001 /* SoccerPitchView.swift in Sources */,
+				BB0000002100000000000001 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		FF0000900200000000000001 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FF0000900300000000000001 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		CC0000810000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PusulAI/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pusulai.pro;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Debug;
+		};
+		CC0000820000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = PusulAI/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pusulai.pro;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				TARGETED_DEVICE_FAMILY = "1";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		CC0000910000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+			};
+			name = Debug;
+		};
+		CC0000920000000000000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				SDKROOT = iphoneos;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		CC0000600000000000000001 /* Build configuration list for PBXProject "PusulAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC0000910000000000000001 /* Debug */,
+				CC0000920000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		CC0000400000000000000001 /* Build configuration list for PBXNativeTarget "PusulAI" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				CC0000810000000000000001 /* Debug */,
+				CC0000820000000000000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = CC0000500000000000000001 /* Project object */;
+}
