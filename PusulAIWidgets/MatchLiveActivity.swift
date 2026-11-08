@@ -21,9 +21,14 @@ struct MatchLiveActivity: Widget {
                 .activityBackgroundTint(Color.black.opacity(0.88))
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
-            let a = context.attributes
-            let s = context.state
-            return DynamicIsland {
+            MatchLiveActivity.island(context)
+        }
+    }
+
+    static func island(_ context: ActivityViewContext<MatchActivityAttributes>) -> DynamicIsland {
+        let a = context.attributes
+        let s = context.state
+        return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     TeamBadge(short: a.homeShort, name: a.home, logoURL: a.homeLogoURL, thumb: a.homeThumb, size: 38)
                 }
@@ -66,7 +71,6 @@ struct MatchLiveActivity: Widget {
                 TeamLogo(short: a.homeShort, logoURL: a.homeLogoURL, thumb: a.homeThumb, size: 20)
             }
             .keylineTint(brand)
-        }
     }
 }
 
