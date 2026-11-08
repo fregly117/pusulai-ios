@@ -24,7 +24,7 @@ final class NativeTracker {
 
     func start() {
         guard timer == nil else { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in self?.poll() }
+        timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.poll() }
         poll()
     }
 
@@ -38,9 +38,10 @@ final class NativeTracker {
         let tracked = order.compactMap { items[$0] }.filter { $0.phase != "ended" }
         var leagues = Set<String>()
         var fotmob = Set<String>()
+        // İki kaynak birden (ESPN + FotMob): golü hangisi önce görürse
         for m in tracked {
             if !m.espnEventId.isEmpty, !m.espnLeague.isEmpty { leagues.insert(m.espnLeague) }
-            else if m.espnEventId.isEmpty, m.fotmobId > 0 { fotmob.insert(String(m.fotmobId)) }
+            if m.fotmobId > 0 { fotmob.insert(String(m.fotmobId)) }
         }
         guard !leagues.isEmpty || !fotmob.isEmpty,
               var comps = URLComponents(url: WebViewController.homeURL.appendingPathComponent("api/live-scores"),
@@ -89,13 +90,18 @@ final class NativeTracker {
         var changed = false
         for key in order {
             guard var m = items[key], m.phase != "ended" else { continue }
-            var src: [String: Any]?
-            var clockKey = "clock"
-            if !m.espnEventId.isEmpty {
-                src = byId[m.espnEventId]
-            } else if m.fotmobId > 0 {
-                src = byFm[m.fotmobId]
-                clockKey = "minute"
+            let espn = m.espnEventId.isEmpty ? nil : byId[m.espnEventId]
+            let fm = m.fotmobId > 0 ? byFm[m.fotmobId] : nil
+            var src: [String: Any]? = espn ?? fm
+            var clockKey = espn != nil ? "clock" : "minute"
+            if let e = espn, let f = fm {
+                let te = NativeTracker.int(e["homeScore"]) + NativeTracker.int(e["awayScore"])
+                let tf = NativeTracker.int(f["homeScore"]) + NativeTracker.int(f["awayScore"])
+                let fPost = NativeTracker.string(f["state"]) == "post" && NativeTracker.string(e["state"]) != "post"
+                if tf > te || (tf == te && fPost) {
+                    src = f
+                    clockKey = "minute"
+                }
             }
             guard let s = src else { continue }
             let state = NativeTracker.string(s["state"])

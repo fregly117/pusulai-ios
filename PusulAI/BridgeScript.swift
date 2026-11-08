@@ -256,6 +256,7 @@ enum BridgeScript {
         as: sc ? sc[1] : 0,
         homeLogo: String((m && m.homeLogo) || ""),
         awayLogo: String((m && m.awayLogo) || ""),
+        ko: ko,
         espnEventId: String((m && m.espnEventId) || ""),
         espnLeague: String((m && m.espnLeague) || ""),
         fotmobId: Number((m && m.fotmobMatchId) || 0)
@@ -272,10 +273,24 @@ enum BridgeScript {
       }
       out.push(item);
     });
-    var s = JSON.stringify(out);
+    // Dinamik Ada'da gösterilecek tek maç: kullanıcının seçimi (Favoriler → "Dinamik Ada'da göster")
+    var pick = "";
+    try { pick = localStorage.getItem("pusulai_island_key") || ""; } catch (e) {}
+    var island = "";
+    if (pick === "__off__") {
+      island = "";
+    } else if (pick && favs.some(function (f) { return f && f.key === pick; })) {
+      island = pick; // seçili maç (henüz canlı değilse ada boş kalır)
+    } else {
+      // Otomatik: canlı olan ilk favori, yoksa en yakın başlayacak maç
+      var liveOne = out.filter(function (x) { return x.phase === "live" || x.phase === "ht"; })[0];
+      var preOne = out.filter(function (x) { return x.phase === "pre"; }).sort(function (a, b) { return (a.ko || 0) - (b.ko || 0); })[0];
+      island = liveOne ? liveOne.key : preOne ? preOne.key : "";
+    }
+    var s = JSON.stringify(out) + "|" + island;
     if (s === lastLive) return;
     lastLive = s;
-    post({ type: "live", matches: out });
+    post({ type: "live", matches: out, island: island });
   }
 
   // 6) Site sesleri -> uygulamanın kendi ses çalıcısı

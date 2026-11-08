@@ -15,6 +15,24 @@ struct MatchActivityAttributes: ActivityAttributes {
         /// Gol anında Dinamik Ada'da "⚽ GOL!" gösterilir.
         var goalSide: String? = nil
         var goalTs: Double? = nil
+        /// Maç saatinin "0. dakikası"nın zamanı (Unix saniye). Varsa kart dakikayı kendisi akıtır:
+        /// uygulama kapalıyken / güncelleme gelmezken bile dakika ilerler (SofaScore gibi).
+        var clockStart: Double? = nil
+
+        /// Canlı saat aralığı (başlangıç → +130 dk)
+        var clockRange: ClosedRange<Date>? {
+            guard phase == "live", let cs = clockStart else { return nil }
+            let start = Date(timeIntervalSince1970: cs)
+            return start...start.addingTimeInterval(130 * 60)
+        }
+
+        /// "67'" → 67, "45+2'" → 47 (bilinmiyorsa nil)
+        static func minuteNumber(_ text: String) -> Int? {
+            let digits = text.split(whereSeparator: { !$0.isNumber })
+            guard let first = digits.first, let base = Int(first) else { return nil }
+            let extra = text.contains("+") && digits.count > 1 ? Int(digits[1]) ?? 0 : 0
+            return base + extra
+        }
 
         /// Gol son 2 dakika içinde mi oldu?
         var recentGoal: Bool {

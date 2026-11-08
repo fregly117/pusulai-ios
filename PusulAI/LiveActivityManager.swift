@@ -59,6 +59,12 @@ final class LiveActivityManager {
     private var starting = Set<String>()
     private var logoRetried = Set<String>()
 
+    /// Dinamik Ada'da gösterilecek tek maç (favori anahtarı). Boşsa hiçbiri.
+    var islandKey: String {
+        get { UserDefaults.standard.string(forKey: "island.key") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "island.key") }
+    }
+
     /// Uygulama açılırken çağrılır: canlı etkinliklerin uzaktan güncelleme anahtarlarını sunucuya iletir.
     /// Sunucu bu anahtarlarla Dinamik Ada'yı uygulama kapalıyken de günceller; iOS 17.2+ cihazlarda
     /// favori maç başladığında etkinliği uygulama kapalıyken bile kendisi başlatır (push-to-start).
@@ -105,8 +111,11 @@ final class LiveActivityManager {
         }
     }
 
-    func sync(_ matches: [LiveMatch]) {
+    func sync(_ allMatches: [LiveMatch]) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        // Yalnızca seçilen maç Dinamik Ada'da; diğerleri kapatılır (bildirimler etkilenmez)
+        let island = islandKey
+        let matches = allMatches.filter { $0.key == island }
 
         var wanted: [String: LiveMatch] = [:]
         for m in matches { wanted[m.key] = m }
@@ -144,6 +153,7 @@ final class LiveActivityManager {
                 newState.goalSide = old.goalSide
                 newState.goalTs = old.goalTs
             }
+            LiveActivityManager.keepClock(&newState, old: old)
 
             if m.phase == "ended" {
                 endedKeys.insert(attrs.matchKey)
@@ -152,7 +162,10 @@ final class LiveActivityManager {
                 continue
             }
 
-            guard newState != old else { continue }
+            // Yalnızca dakika metni değiştiyse ve saat zaten akıyorsa güncelleme gönderme (kart kendisi ilerletiyor)
+            var cmp = newState
+            if cmp.clockStart != nil && cmp.clockStart == old.clockStart { cmp.minute = old.minute }
+            guard cmp != old else { continue }
             let content = ActivityContent(state: newState, staleDate: Date().addingTimeInterval(30 * 60))
 
             if newState.homeScore + newState.awayScore > old.homeScore + old.awayScore {
@@ -229,10 +242,22 @@ final class LiveActivityManager {
     }
 
     static func state(for m: LiveMatch) -> MatchActivityAttributes.ContentState {
-        MatchActivityAttributes.ContentState(homeScore: m.homeScore,
-                                             awayScore: m.awayScore,
-                                             minute: m.minute,
-                                             phase: m.phase)
+        var st = MatchActivityAttributes.ContentState(homeScore: m.homeScore,
+                                                      awayScore: m.awayScore,
+                                                      minute: m.minute,
+                                                      phase: m.phase)
+        // Canlı saat: bilinen dakikadan geriye doğru "0. dakika" zamanı (dakikanın ortası varsayılır)
+        if m.phase == "live", let mn = MatchActivityAttributes.ContentState.minuteNumber(m.minute) {
+            st.clockStart = Date().timeIntervalSince1970 - Double(mn) * 60 - 30
+        }
+        return st
+    }
+
+    /// Saat zaten doğruysa (±90 sn) eskisini koru: gereksiz güncelleme ve geri sıçrama olmasın
+    static func keepClock(_ new: inout MatchActivityAttributes.ContentState, old: MatchActivityAttributes.ContentState) {
+        if let n = new.clockStart, let o = old.clockStart, abs(n - o) < 90, old.phase == new.phase {
+            new.clockStart = o
+        }
     }
 
     /// "Galatasaray" → "GAL", "AC Milan" → "MIL", "VfB Stuttgart" → "STU"

@@ -272,6 +272,9 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
 
         case "live":
             let list = (body["matches"] as? [[String: Any]] ?? []).compactMap { LiveMatch(dict: $0) }
+            let island = body["island"] as? String ?? ""
+            LiveActivityManager.shared.islandKey = island
+            PushRegistrar.shared.setIsland(island)
             LiveActivityManager.shared.sync(list)
             NativeTracker.shared.update(list)
 

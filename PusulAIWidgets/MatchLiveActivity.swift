@@ -218,7 +218,16 @@ struct StatusLabel: View {
         case "live":
             HStack(spacing: 4) {
                 Circle().fill(liveRed).frame(width: 6, height: 6)
-                Text(state.minute).font(.system(size: 12, weight: .bold)).foregroundColor(liveRed)
+                if let range = state.clockRange {
+                    // Kendi kendine akan maç saati (ör. 67:12) — uygulama kapalıyken de ilerler
+                    Text(timerInterval: range, countsDown: false, showsHours: false)
+                        .font(.system(size: 12, weight: .bold))
+                        .monospacedDigit()
+                        .foregroundColor(liveRed)
+                        .frame(width: 42, alignment: .leading)
+                } else {
+                    Text(state.minute).font(.system(size: 12, weight: .bold)).foregroundColor(liveRed)
+                }
             }
         case "ht":
             Text("Devre arası").font(.system(size: 12, weight: .bold)).foregroundColor(goldText)

@@ -13,6 +13,7 @@ final class PushRegistrar {
     private var favoriteKeys: [String]
     private var liveTokens: [String: String]
     private var startToken: String?
+    private var islandKey: String
     private var pending: DispatchWorkItem?
     private var bgTask: UIBackgroundTaskIdentifier = .invalid
 
@@ -24,6 +25,7 @@ final class PushRegistrar {
         favoriteKeys = defaults.stringArray(forKey: "apns.favoriteKeys") ?? []
         liveTokens = (defaults.dictionary(forKey: "apns.liveTokens") as? [String: String]) ?? [:]
         startToken = defaults.string(forKey: "apns.startToken")
+        islandKey = defaults.string(forKey: "apns.islandKey") ?? ""
         remoteActive = defaults.bool(forKey: "apns.remoteActive")
     }
 
@@ -72,6 +74,16 @@ final class PushRegistrar {
         }
     }
 
+    /// Dinamik Ada'da gösterilecek maç değişti: sunucu yalnızca bu maçın adasını günceller
+    func setIsland(_ key: String) {
+        onMain {
+            guard key != self.islandKey else { return }
+            self.islandKey = key
+            self.defaults.set(key, forKey: "apns.islandKey")
+            self.schedule()
+        }
+    }
+
     func markRemoteUnavailable() {
         onMain {
             self.remoteActive = false
@@ -100,6 +112,7 @@ final class PushRegistrar {
             "favoriteKeys": favoriteKeys,
             "liveTokens": liveTokens,
             "startToken": startToken ?? "",
+            "islandKey": islandKey,
         ]
         guard let data = try? JSONSerialization.data(withJSONObject: body) else { return }
         var req = URLRequest(url: PushRegistrar.endpoint)
