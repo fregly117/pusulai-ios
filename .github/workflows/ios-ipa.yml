@@ -1,0 +1,57 @@
+name: PusulAI iOS (.ipa)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Xcode projesini oluştur
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Derle (imzasız)
+        run: |
+          xcodebuild -project PusulAI.xcodeproj -scheme PusulAI -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/PusulAI.xcarchive" archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM=""
+
+      - name: .ipa paketle
+        run: |
+          APP="$RUNNER_TEMP/PusulAI.xcarchive/Products/Applications/PusulAI.app"
+          test -d "$APP"
+          mkdir -p out/Payload
+          cp -R "$APP" out/Payload/
+          # Bildirim (APNs) ve ortak logo klasörü (App Group) yetkilerini göm: Sideloadly / imzalayıcı bunu korur
+          APPX="out/Payload/PusulAI.app"
+          if [ -d "$APPX/PlugIns/PusulAIWidgets.appex" ]; then
+            codesign --force --sign - --timestamp=none --entitlements "$GITHUB_WORKSPACE/PusulAIWidgets/PusulAIWidgets.entitlements" "$APPX/PlugIns/PusulAIWidgets.appex" || true
+          fi
+          codesign --force --sign - --timestamp=none --entitlements "$GITHUB_WORKSPACE/PusulAI/PusulAI.entitlements" "$APPX" || true
+          codesign -d --entitlements - "$APPX" || true
+          ls "$APPX/PlugIns" || echo "UYARI: widget eklentisi bulunamadı"
+          cd out && zip -qry PusulAI.ipa Payload && ls -lh PusulAI.ipa
+
+      - name: Artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: PusulAI-ipa
+          path: out/PusulAI.ipa
+
+      - name: Release olarak yayınla (doğrudan .ipa indirme linki)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: PusulAI iOS — derleme ${{ github.run_number }}
+          files: out/PusulAI.ipa
