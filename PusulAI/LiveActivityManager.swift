@@ -7,12 +7,16 @@ struct LiveMatch {
     let home: String
     let away: String
     let league: String
-    let homeScore: Int
-    let awayScore: Int
-    let minute: String
-    let phase: String
+    var homeScore: Int
+    var awayScore: Int
+    var minute: String
+    var phase: String
     let homeLogo: String
     let awayLogo: String
+    /// Arka planda uygulamanın kendisi skor çekebilsin diye (sitenin /api/live-scores uç noktası)
+    let espnEventId: String
+    let espnLeague: String
+    let fotmobId: Int
 
     init?(dict d: [String: Any]) {
         guard let key = d["key"] as? String, !key.isEmpty else { return nil }
@@ -26,6 +30,22 @@ struct LiveMatch {
         phase = d["phase"] as? String ?? "live"
         homeLogo = d["homeLogo"] as? String ?? ""
         awayLogo = d["awayLogo"] as? String ?? ""
+        espnEventId = d["espnEventId"] as? String ?? ""
+        espnLeague = d["espnLeague"] as? String ?? ""
+        fotmobId = (d["fotmobId"] as? NSNumber)?.intValue ?? 0
+    }
+
+    /// Sitedeki dakika biçimi: "29'", "45+2'", "İY"
+    static func shortMinute(_ raw: String) -> String {
+        var t = raw
+        for ch in ["\u{200E}", "\u{200F}", "'", "\"", "’", "′", "″", "`", "´"] { t = t.replacingOccurrences(of: ch, with: "") }
+        t = t.trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.isEmpty { return "Canlı" }
+        let lower = t.lowercased()
+        if lower.hasPrefix("ht") || lower.hasPrefix("iy") || lower.hasPrefix("i̇y") || lower.hasPrefix("devre") || lower.hasPrefix("half") || t.hasPrefix("İY") { return "İY" }
+        let digits = t.prefix { $0.isNumber || $0 == "+" || $0 == " " }.replacingOccurrences(of: " ", with: "")
+        if !digits.isEmpty, digits.first?.isNumber == true { return digits + "'" }
+        return t
     }
 }
 
@@ -37,6 +57,7 @@ final class LiveActivityManager {
     private var endedKeys = Set<String>()
     private var observed = Set<String>()
     private var starting = Set<String>()
+    private var logoRetried = Set<String>()
 
     /// Uygulama açılırken çağrılır: canlı etkinliklerin uzaktan güncelleme anahtarlarını sunucuya iletir.
     /// Sunucu bu anahtarlarla Dinamik Ada'yı uygulama kapalıyken de günceller; iOS 17.2+ cihazlarda
@@ -102,8 +123,27 @@ final class LiveActivityManager {
                 continue
             }
 
-            let newState = LiveActivityManager.state(for: m)
+            // Logosuz başlamış etkinlik (eski sürüm / logo indirilemedi): uygulama açıkken bir kez logolu yeniden başlat
+            if UIApplication.shared.applicationState == .active, !logoRetried.contains(attrs.matchKey),
+               !(m.homeLogo.isEmpty && m.awayLogo.isEmpty),
+               attrs.homeThumb == nil, attrs.awayThumb == nil,
+               LogoStore.fileURL(for: attrs.homeLogoURL).map({ !FileManager.default.fileExists(atPath: $0.path) }) ?? true {
+                logoRetried.insert(attrs.matchKey)
+                running.remove(attrs.matchKey)
+                Task { await activity.end(nil, dismissalPolicy: .immediate) }
+                continue
+            }
+
+            var newState = LiveActivityManager.state(for: m)
             let old = activity.content.state
+            // Gol bilgisini taşı; yeni gol varsa işaretle (Dinamik Ada'da "⚽ GOL!")
+            if newState.homeScore + newState.awayScore > old.homeScore + old.awayScore {
+                newState.goalSide = newState.homeScore > old.homeScore ? "home" : "away"
+                newState.goalTs = Date().timeIntervalSince1970
+            } else {
+                newState.goalSide = old.goalSide
+                newState.goalTs = old.goalTs
+            }
 
             if m.phase == "ended" {
                 endedKeys.insert(attrs.matchKey)
@@ -117,7 +157,7 @@ final class LiveActivityManager {
 
             if newState.homeScore + newState.awayScore > old.homeScore + old.awayScore {
                 // GOL → Dinamik Ada büyür, kilit ekranında öne çıkar
-                let scorer = newState.homeScore > old.homeScore ? attrs.home : attrs.away
+                let scorer = newState.goalSide == "home" ? attrs.home : attrs.away
                 let title = "⚽ GOL! \(scorer)"
                 let body = "\(attrs.home) \(newState.homeScore) - \(newState.awayScore) \(attrs.away)  \(newState.minute)"
                 let alert = AlertConfiguration(title: LocalizedStringResource(stringLiteral: title),
@@ -136,18 +176,18 @@ final class LiveActivityManager {
             starting.insert(m.key)
             Task {
                 // Önce takım logolarını indir (SofaScore gibi logolu Dinamik Ada)
-                async let homeThumb = LogoLoader.fetch(m.homeLogo)
-                async let awayThumb = LogoLoader.fetch(m.awayLogo)
-                let thumbs = await (homeThumb, awayThumb)
+                async let homeImage = LogoLoader.fetch(m.homeLogo)
+                async let awayImage = LogoLoader.fetch(m.awayLogo)
+                let images = await (homeImage, awayImage)
                 DispatchQueue.main.async {
                     self.starting.remove(m.key)
-                    self.start(m, homeThumb: thumbs.0, awayThumb: thumbs.1)
+                    self.start(m, homeImage: images.0, awayImage: images.1)
                 }
             }
         }
     }
 
-    private func start(_ m: LiveMatch, homeThumb: Data?, awayThumb: Data?) {
+    private func start(_ m: LiveMatch, homeImage: UIImage?, awayImage: UIImage?) {
         guard UIApplication.shared.applicationState == .active else { return }
         if Activity<MatchActivityAttributes>.activities.contains(where: {
             $0.attributes.matchKey == m.key && ($0.activityState == .active || $0.activityState == .stale)
@@ -161,12 +201,21 @@ final class LiveActivityManager {
                                             league: m.league,
                                             homeLogoURL: m.homeLogo.isEmpty ? nil : m.homeLogo,
                                             awayLogoURL: m.awayLogo.isEmpty ? nil : m.awayLogo,
-                                            homeThumb: homeThumb,
-                                            awayThumb: awayThumb)
-        // Canlı etkinlik verisi 4 KB'ı geçemez: sığmazsa gömülü logoları çıkar (ortak klasördeki kalır)
-        if let size = try? JSONEncoder().encode(attrs).count, size > 3300 {
-            attrs.homeThumb = nil
-            attrs.awayThumb = nil
+                                            homeThumb: nil,
+                                            awayThumb: nil)
+        // Canlı etkinlik verisi 4 KB'ı geçemez: logoları sığana kadar küçült (en net olandan başla)
+        if homeImage != nil || awayImage != nil {
+            let ladder: [(Int, CGFloat)] = [(40, 0.6), (34, 0.55), (28, 0.5), (24, 0.45), (20, 0.4)]
+            var fitted = false
+            for (side, quality) in ladder {
+                attrs.homeThumb = homeImage.flatMap { LogoLoader.thumb($0, side: side, quality: quality) }
+                attrs.awayThumb = awayImage.flatMap { LogoLoader.thumb($0, side: side, quality: quality) }
+                if let size = try? JSONEncoder().encode(attrs).count, size <= 3500 { fitted = true; break }
+            }
+            if !fitted {
+                attrs.homeThumb = nil
+                attrs.awayThumb = nil
+            }
         }
         let content = ActivityContent(state: LiveActivityManager.state(for: m),
                                       staleDate: Date().addingTimeInterval(30 * 60))

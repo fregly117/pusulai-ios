@@ -11,6 +11,16 @@ struct MatchActivityAttributes: ActivityAttributes {
         var minute: String
         /// "pre" | "live" | "ht" | "ended"
         var phase: String
+        /// Son golü atan taraf ("home" | "away") ve golün zamanı (Unix saniye).
+        /// Gol anında Dinamik Ada'da "⚽ GOL!" gösterilir.
+        var goalSide: String? = nil
+        var goalTs: Double? = nil
+
+        /// Gol son 2 dakika içinde mi oldu?
+        var recentGoal: Bool {
+            guard let ts = goalTs else { return false }
+            return Date().timeIntervalSince1970 - ts < 120
+        }
     }
 
     var matchKey: String

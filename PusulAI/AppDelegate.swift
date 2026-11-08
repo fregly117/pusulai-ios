@@ -36,10 +36,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationC
         bgTask = application.beginBackgroundTask { [weak self] in
             self?.endBackgroundTask()
         }
-        BackgroundKeeper.shared.start { [weak self] in
-            self?.webVC.setKeepAlive(false)
+        BackgroundKeeper.shared.start {
+            NativeTracker.shared.stop()
         }
-        webVC.setKeepAlive(true)
+        NativeTracker.shared.start()
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             self?.endBackgroundTask()
         }
@@ -55,7 +55,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationC
 
     func applicationWillEnterForeground(_ application: UIApplication) {
         BackgroundKeeper.shared.stop()
-        webVC.setKeepAlive(false)
+        NativeTracker.shared.stop()
         webVC.refreshNotificationPermission()
     }
 

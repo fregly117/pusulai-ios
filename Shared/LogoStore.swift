@@ -5,7 +5,23 @@ import CryptoKit
 /// Dinamik Ada kartı internetten resim indiremez (iOS kuralı); uygulama logoyu önceden indirip buraya koyar,
 /// kart da buradan okur. SofaScore da aynı yöntemi kullanır.
 enum LogoStore {
-    static let groupID = "group.com.klennys.pusulai"
+    /// Ortak klasör adı. Sideloadly vb. imzalarken adı değiştirebilir (ör. sonuna takım kimliği ekler);
+    /// bu yüzden önce uygulamanın kendi imza dosyasındaki (embedded.mobileprovision) gerçek ad okunur.
+    static let groupID: String = provisionedGroup() ?? "group.com.klennys.pusulai"
+
+    private static func provisionedGroup() -> String? {
+        guard let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let raw = try? Data(contentsOf: url),
+              let text = String(data: raw, encoding: .isoLatin1),
+              let start = text.range(of: "<?xml"),
+              let end = text.range(of: "</plist>"),
+              let xml = String(text[start.lowerBound..<end.upperBound]).data(using: .isoLatin1),
+              let plist = (try? PropertyListSerialization.propertyList(from: xml, format: nil)) as? [String: Any],
+              let entitlements = plist["Entitlements"] as? [String: Any],
+              let groups = entitlements["com.apple.security.application-groups"] as? [String],
+              !groups.isEmpty else { return nil }
+        return groups.first(where: { $0.lowercased().contains("pusulai") }) ?? groups.first
+    }
 
     static var directory: URL? {
         guard let base = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: groupID) else { return nil }

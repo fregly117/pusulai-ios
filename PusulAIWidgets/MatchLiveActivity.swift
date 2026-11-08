@@ -37,15 +37,27 @@ struct MatchLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.center) {
                     VStack(spacing: 2) {
+                        if s.recentGoal {
+                            Text("⚽ GOL!")
+                                .font(.system(size: 14, weight: .black, design: .rounded))
+                                .foregroundColor(goldText)
+                        }
                         ScoreText(state: s, size: 30)
                         StatusLabel(state: s)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(a.league)
-                        .font(.caption2)
-                        .foregroundColor(.white.opacity(0.6))
-                        .lineLimit(1)
+                    if s.recentGoal {
+                        Text("\(s.goalSide == "home" ? a.home : a.away) attı · \(s.minute)")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(goldText)
+                            .lineLimit(1)
+                    } else {
+                        Text(a.league)
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.6))
+                            .lineLimit(1)
+                    }
                 }
             } compactLeading: {
                 // SofaScore gibi: ev sahibi logosu + skoru
@@ -61,6 +73,11 @@ struct MatchLiveActivity: Widget {
             } compactTrailing: {
                 // deplasman skoru + logosu (başlamadıysa saat)
                 HStack(spacing: 5) {
+                    if s.recentGoal {
+                        Text("GOL")
+                            .font(.system(size: 11, weight: .black, design: .rounded))
+                            .foregroundColor(goldText)
+                    }
                     Text(s.phase == "pre" ? s.minute : "\(s.awayScore)")
                         .font(.system(size: s.phase == "pre" ? 12 : 15, weight: .heavy, design: .rounded))
                         .monospacedDigit()
@@ -86,10 +103,17 @@ struct LockScreenView: View {
                 HStack(spacing: 5) {
                     RoundedRectangle(cornerRadius: 3).fill(brand).frame(width: 14, height: 14)
                         .overlay(Text("P").font(.system(size: 10, weight: .black)).foregroundColor(.white))
-                    Text(attrs.league.isEmpty ? "PusulAI" : attrs.league)
-                        .font(.caption)
-                        .foregroundColor(.white.opacity(0.65))
-                        .lineLimit(1)
+                    if state.recentGoal {
+                        Text("⚽ GOL! \(state.goalSide == "home" ? attrs.home : attrs.away)")
+                            .font(.system(size: 13, weight: .black, design: .rounded))
+                            .foregroundColor(goldText)
+                            .lineLimit(1)
+                    } else {
+                        Text(attrs.league.isEmpty ? "PusulAI" : attrs.league)
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.65))
+                            .lineLimit(1)
+                    }
                 }
                 Spacer()
                 StatusLabel(state: state)

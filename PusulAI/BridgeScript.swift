@@ -13,7 +13,6 @@ enum BridgeScript {
   }
 
   var state = { permission: "__PERMISSION__", reqId: 0, pending: {} };
-  var keepAudio = null;
 
   var N = {
     isApp: true,
@@ -25,34 +24,11 @@ enum BridgeScript {
       delete state.pending[id];
       if (cb) cb(p);
     },
-    keepAlive: function (on) {
-      try {
-        if (on) {
-          if (!keepAudio) {
-            keepAudio = new Audio(silentWavURL());
-            keepAudio.loop = true;
-            keepAudio.setAttribute("playsinline", "");
-          }
-          var p = keepAudio.play();
-          if (p && p.catch) p.catch(function () {});
-        } else if (keepAudio) {
-          keepAudio.pause();
-        }
-      } catch (e) {}
-    }
+    // Eski sürümdeki sayfa içi sessiz ses kaldırıldı (kilit ekranında müzik oynatıcısı açıyordu);
+    // arka plan takibini artık uygulamanın kendisi yapıyor (NativeTracker).
+    keepAlive: function () {}
   };
   window.__pusulaiNative = N;
-
-  function silentWavURL() {
-    var sr = 8000, n = sr;
-    var buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
-    function s(o, str) { for (var i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); }
-    s(0, "RIFF"); v.setUint32(4, 36 + n * 2, true); s(8, "WAVE"); s(12, "fmt ");
-    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-    v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
-    s(36, "data"); v.setUint32(40, n * 2, true);
-    return URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
-  }
 
   // 1) Site kendini ana ekran (standalone) uygulaması olarak görsün
   try { Object.defineProperty(navigator, "standalone", { get: function () { return true; }, configurable: true }); } catch (e) {}
@@ -279,7 +255,10 @@ enum BridgeScript {
         hs: sc ? sc[0] : 0,
         as: sc ? sc[1] : 0,
         homeLogo: String((m && m.homeLogo) || ""),
-        awayLogo: String((m && m.awayLogo) || "")
+        awayLogo: String((m && m.awayLogo) || ""),
+        espnEventId: String((m && m.espnEventId) || ""),
+        espnLeague: String((m && m.espnLeague) || ""),
+        fotmobId: Number((m && m.fotmobMatchId) || 0)
       };
       if (state === "live") {
         item.minute = fmtMinute(m.liveMinute);
@@ -298,6 +277,53 @@ enum BridgeScript {
     lastLive = s;
     post({ type: "live", matches: out });
   }
+
+  // 6) Site sesleri -> uygulamanın kendi ses çalıcısı
+  //    (sayfa içinde çalınca iPhone bunu müzik sanıp kilit ekranında oynatıcı açıyordu)
+  var SOUND_RE = /\/sounds\/([a-z0-9_-]+)\.mp3/i;
+  function soundName(u) { var x = String(u || "").match(SOUND_RE); return x ? x[1].toLowerCase() : null; }
+  var bufTag = new WeakMap(), audioTag = new WeakMap();
+  try {
+    var origAB = Response.prototype.arrayBuffer;
+    Response.prototype.arrayBuffer = function () {
+      var name = soundName(this.url);
+      var pr = origAB.apply(this, arguments);
+      if (!name) return pr;
+      return pr.then(function (ab) { try { bufTag.set(ab, name); } catch (e) {} return ab; });
+    };
+  } catch (e) {}
+  try {
+    var ACtor = window.AudioContext || window.webkitAudioContext;
+    var acProto = window.BaseAudioContext ? window.BaseAudioContext.prototype : (ACtor && ACtor.prototype);
+    if (acProto && acProto.decodeAudioData) {
+      var origDecode = acProto.decodeAudioData;
+      acProto.decodeAudioData = function (data, ok, fail) {
+        var name = null;
+        try { name = data ? bufTag.get(data) : null; } catch (e) {}
+        if (!name) return origDecode.apply(this, arguments);
+        var tagIt = function (buf) { try { audioTag.set(buf, name); } catch (e) {} return buf; };
+        var r = origDecode.call(this, data, function (buf) { tagIt(buf); if (ok) ok(buf); }, fail);
+        return (r && r.then) ? r.then(tagIt) : r;
+      };
+    }
+    if (window.AudioBufferSourceNode) {
+      var origStart = AudioBufferSourceNode.prototype.start;
+      AudioBufferSourceNode.prototype.start = function () {
+        var name = null;
+        try { name = this.buffer ? audioTag.get(this.buffer) : null; } catch (e) {}
+        if (name) { post({ type: "sound", name: name }); return; }
+        return origStart.apply(this, arguments);
+      };
+    }
+  } catch (e) {}
+  try {
+    var origPlay = HTMLMediaElement.prototype.play;
+    HTMLMediaElement.prototype.play = function () {
+      var name = soundName(this.currentSrc || this.src);
+      if (name) { post({ type: "sound", name: name }); return Promise.resolve(); }
+      return origPlay.apply(this, arguments);
+    };
+  } catch (e) {}
 
   var syncTimer = null;
   function scheduleSync() {

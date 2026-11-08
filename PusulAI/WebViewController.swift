@@ -273,6 +273,10 @@ final class WebViewController: UIViewController, WKNavigationDelegate, WKUIDeleg
         case "live":
             let list = (body["matches"] as? [[String: Any]] ?? []).compactMap { LiveMatch(dict: $0) }
             LiveActivityManager.shared.sync(list)
+            NativeTracker.shared.update(list)
+
+        case "sound":
+            if let name = body["name"] as? String { SoundPlayer.play(name) }
 
         case "favorites":
             let keys = (body["keys"] as? [Any] ?? []).compactMap { $0 as? String }
