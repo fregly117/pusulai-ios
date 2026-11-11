@@ -14,6 +14,16 @@ final class NativeTracker {
     private var timer: Timer?
     private var inFlight = false
 
+    // GOL SİNYALLERİ (arka planda): sayfa uyutulduğu için sinyali sayfa üretemez.
+    // Sunucu (server-push-daemon.js) tüm canlı maçlar için sinyali 30 sn'de bir üretip kaydeder;
+    // uygulama /api/goal-alerts'i 20 sn'de bir okuyup yeni sinyali sitedeki metin ve sesle bildirir.
+    private var signalTimer: Timer?
+    private var signalInFlight = false
+    private var notifiedSignals = Set<String>()
+    private var signalSince: Double = 0 // ms; bundan eski sinyaller bildirilmez
+    private static let signalSeenKey = "signals.lastSeenTs"
+    private static let goalAlertOptOutKey = "__goal_alerts_off__"
+
     /// Sayfadan gelen son durum (uygulama açıkken sürekli güncellenir)
     func update(_ matches: [LiveMatch]) {
         var next: [String: LiveMatch] = [:]
@@ -26,11 +36,113 @@ final class NativeTracker {
         guard timer == nil else { return }
         timer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.poll() }
         poll()
+
+        // Uygulama açıkken sayfa kendi sinyallerini bildirdi: yalnızca son 2 dakikadan yenileri
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        signalSince = max(UserDefaults.standard.double(forKey: NativeTracker.signalSeenKey), nowMs - 2 * 60 * 1000)
+        signalTimer = Timer.scheduledTimer(withTimeInterval: 20, repeats: true) { [weak self] _ in self?.pollSignals() }
+        pollSignals()
     }
 
     func stop() {
         timer?.invalidate()
         timer = nil
+        signalTimer?.invalidate()
+        signalTimer = nil
+    }
+
+    private func pollSignals() {
+        guard !signalInFlight else { return }
+        // Sitedeki gol sinyali bildirimi kapalıysa (zil) gönderme
+        let keys = UserDefaults.standard.stringArray(forKey: "apns.favoriteKeys") ?? []
+        if keys.contains(NativeTracker.goalAlertOptOutKey) { return }
+        guard var comps = URLComponents(url: WebViewController.homeURL.appendingPathComponent("api/goal-alerts"),
+                                        resolvingAgainstBaseURL: false) else { return }
+        comps.queryItems = [URLQueryItem(name: "days", value: "1")]
+        guard let url = comps.url else { return }
+        var req = URLRequest(url: url)
+        req.timeoutInterval = 10
+        req.cachePolicy = .reloadIgnoringLocalCacheData
+        signalInFlight = true
+        URLSession.shared.dataTask(with: req) { [weak self] data, _, _ in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.signalInFlight = false
+                if let data = data { self.applySignals(data) }
+            }
+        }.resume()
+    }
+
+    private static func double(_ v: Any?) -> Double {
+        if let n = v as? NSNumber { return n.doubleValue }
+        if let s = v as? String { return Double(s) ?? 0 }
+        return 0
+    }
+
+    private static func pct(_ p: Double) -> String { "%\(Int((p * 100).rounded()))" }
+
+    private func applySignals(_ data: Data) {
+        guard let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+              let list = json["alerts"] as? [[String: Any]] else { return }
+        let nowMs = Date().timeIntervalSince1970 * 1000
+        let fresh = list
+            .filter { NativeTracker.double($0["ts"]) > signalSince }
+            .sorted { NativeTracker.double($0["ts"]) < NativeTracker.double($1["ts"]) }
+        guard !fresh.isEmpty else { return }
+
+        var newest = signalSince
+        var sent = 0
+        for a in fresh {
+            let ts = NativeTracker.double(a["ts"])
+            newest = max(newest, ts)
+            let id = NativeTracker.string(a["id"])
+            guard !id.isEmpty, !notifiedSignals.contains(id) else { continue }
+            notifiedSignals.insert(id)
+            // Sonucu belli olmuş (gol gelmiş) ya da 10 dk'dan eski sinyal artık bildirilmez
+            if !NativeTracker.string(a["outcome"]).isEmpty { continue }
+            if nowMs - ts > 10 * 60 * 1000 { continue }
+            guard sent < 5 else { continue }
+            sent += 1
+            notifySignal(a)
+        }
+        signalSince = newest
+        UserDefaults.standard.set(newest, forKey: NativeTracker.signalSeenKey)
+        if notifiedSignals.count > 500 { notifiedSignals.removeAll() }
+    }
+
+    /// Sunucunun gol sinyali push'u ile aynı metin ve etiket (aynı maçta sayfanınkinin yerine geçer)
+    private func notifySignal(_ a: [String: Any]) {
+        let key = NativeTracker.string(a["key"])
+        let home = NativeTracker.string(a["home"])
+        let away = NativeTracker.string(a["away"])
+        let minute = LiveMatch.shortMinute(NativeTracker.string(a["minute"]))
+        let score = NativeTracker.string(a["score"]).isEmpty ? "0 - 0" : NativeTracker.string(a["score"])
+        let level = NativeTracker.string(a["level"])
+        let side = NativeTracker.string(a["side"])
+        let prob = NativeTracker.double(a["prob"])
+        let windowMin = Int(NativeTracker.double(a["windowMin"])) == 0 ? 10 : Int(NativeTracker.double(a["windowMin"]))
+        let pH = a["probHome"] as? NSNumber
+        let pA = a["probAway"] as? NSNumber
+
+        var teamLine = "\(NativeTracker.pct(prob)) olasılıkla \(windowMin) dk içinde gol"
+        if side == "both", let h = pH, let w = pA {
+            teamLine = "İki takım da baskıda · \(home) \(NativeTracker.pct(h.doubleValue)), \(away) \(NativeTracker.pct(w.doubleValue)) gol atma ihtimali"
+        } else if side == "home", let h = pH {
+            teamLine = "\(home) baskıda · gol atma ihtimali \(NativeTracker.pct(h.doubleValue))"
+        } else if side == "away", let w = pA {
+            teamLine = "\(away) baskıda · gol atma ihtimali \(NativeTracker.pct(w.doubleValue))"
+        }
+        let head = "\(minute == "Canlı" ? "" : minute + " ")\(level == "high" ? "Gol kapıda" : "Gol sinyali"): \(score)"
+
+        let tag = "pusulai-goalalert-\(key)"
+        let content = UNMutableNotificationContent()
+        content.title = "\(home) - \(away)"
+        content.body = "\(head)\n\(teamLine)\n\(windowMin) dk içinde maçta gol: \(NativeTracker.pct(prob))"
+        content.sound = NotificationSounds.sound(forTag: tag)
+        content.threadIdentifier = "pusulai"
+        content.userInfo = ["url": "/#gol-sinyalleri"]
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: tag, content: content, trigger: nil),
+                                               withCompletionHandler: nil)
     }
 
     private func poll() {
